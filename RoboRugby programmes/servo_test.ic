@@ -1,0 +1,40 @@
+/*  Program to test a servo actuator and find its limits.
+    Connect the servo to servo port 0 - the one nearest the display.
+    The black wire must be on the left, as you read the display.
+    Always switch off the Handyboard before connecting the servo.  */
+
+void main()
+{
+    servo0 = 1500;       // set servo to a mid position before enabling
+    init_expbd_servos(1); // turn on the servo software
+    printf("Servo at %d    Press START\n",servo0);   // display position
+    
+    start_press();  // wait for start button
+    
+    while (!stop_button())  // repeat until button pressed
+      {
+        servo0 = servo0 + 100;  // move servo
+        if (servo0 > 2400) servo0 = 1000;  // but not too far
+        printf("Servo at %d    Press STOP\n",servo0);  // display new position
+        sleep(0.1);    // delay a little
+    }  // end of while
+    
+    printf("START = down    STOP = up\n");   // instructions
+    sleep(2.0);  // delay
+    
+    while(1)  // repeat this forever
+      {
+        if(start_button())  // if START pressed, subtract 20 from position
+          {
+            servo0 = servo0 - 20;
+        }
+        if(stop_button())   // if STOP pressed, add 20 to position
+          {
+            servo0 = servo0 + 20;
+        }
+        printf("Servo at %d\n",servo0);  // display new position
+        sleep(0.1);         // delay a little
+    }  // end of while
+    
+}  // end of main
+

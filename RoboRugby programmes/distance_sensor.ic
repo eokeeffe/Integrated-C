@@ -1,0 +1,21 @@
+/* Program to test distance sensors.
+   Assumes lower sensor is connected to port 4, upper to port 5.
+   Change this to suit your robot.  */
+#define LOSENS 4
+#define HISENS 5
+
+void main()
+{
+    int lower;  // declare variables to hold sensor values
+    int upper;
+    
+    while(!stop_button())
+      {
+        lower = analog(LOSENS);   // get values from the sensors
+        upper = analog(HISENS);
+        // print both values, and their difference
+        printf("Low %d High %d    Differ %d\n",lower, upper, lower-upper );  
+        sleep(0.3);         // delay to avoid flickering display
+    }
+}
+

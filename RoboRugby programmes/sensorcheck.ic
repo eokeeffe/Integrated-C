@@ -1,0 +1,17 @@
+void main()
+{
+    while(!stop_button())  // keep doing this until STOP is pressed
+      {
+        if (analog(2) < 50)  // is value from sensor low?
+          {
+            set_digital_out(0);  // if low, turn on LED
+            beep();              // and beep
+        }
+        else 
+          {
+            clear_digital_out(0);   // otherwise turn it off
+        }
+        printf("Port 2: %d\n", analog(2));  // print value
+        sleep(0.5);   // delay to avoid flickering display
+    }
+}

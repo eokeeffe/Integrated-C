@@ -1,0 +1,244 @@
+/* Team 8:  Phelim Dowling, Evan O'Keefe and Rachel Murphy 
+    
+Challenge 4 Report:
+
+For challenge 4 our robot was programmed to find balls.
+We decided for our robot to begin searching for a ball by driving forward for a few seconds. 
+It would then spin around in a circle trying to sense a ball. 
+We encountered some difficulties with getting the sensor readings to find the balls and this turned out to be the hardest part of all
+
+If a ball was found the robot would drive towards it and once it hit the ball our robot would do a 180 degree turn and 
+drive the opposite way,
+increment the i counter until 5 collisions where counted. 
+The robot would then repeat what it did at the beginning. 
+If no ball was found while the robot was spinning around in a circle then the robot would drive forward a few seconds,
+stop and then spin in a circle again. The robot would keep repeating these steps until a ball was found. */
+
+
+
+// first tell compiler to use beacon software
+#use beacons.icb         
+// define which beacon receiver to use: 1 internal, 2 external
+#define BCNREC 2
+//front left motor
+#define FLM 1
+//front right motor
+#define FRM 2
+//back left MOTOR
+#define BLM 3
+//back right motor
+#define BRM 4
+//switch left side
+#define SL digital(9)
+//switch right side
+#define SR digital(10)
+//left light sensor
+#define LLS analog(2)
+//right light sensor
+#define RLS analog(3)
+//threshold for the analog light sensors
+#define THR 40
+//top speed
+#define FAST 100
+//medium speed
+#define MED 50
+//slow speed
+#define SLOW 25
+//beacon for side A
+#define beaconA 12
+//beacon for side B
+#define beaconB 5
+//lower sensor 
+#define LOSENS 4
+//higher sensor
+#define HISENS 5
+
+
+void main()
+{
+    int i=0;
+    printf("Welcome to \n");
+    printf("Press Start\n");
+    start_press();         // wait for START to be pressed
+    while(i<5)//5 collisions
+    {
+        if(ball() == 0)//if no ball is detected
+          {
+            clear_digital_out(0);//led is off
+            turnaround(50);//turn for a bit
+            sleep(1.0);
+            drive(65);//drive to get make sure we check the whole table
+            sleep(2.0);
+            if(ball() == 1)//if a ball is detected
+              {
+                set_digital_out(0);//led on
+                drive(100);//drive and hit the ball
+                sleep(2.0);
+                i++;//add 1 to the counter
+            }
+            
+          }
+                
+        if(collision()==1){turnright(50,4.0);}//if there is a collsion on the left then turn right
+        if(collision()==2){turnleft(50,4.0);}//if there is a collsion on the right turn left
+        if(collision()==3){reverse(50,5.0);}//if centre collsion then reverse for 5 seconds
+        else 
+          {}
+    }
+        
+}
+void move_to_the_beacon()//move to the beacon that is looked for
+{
+    int bcn;         // define variable for beacon result
+    beacon_init(BCNREC);   // turn on beacon receiver
+    
+    while(!stop_button())
+      {
+        bcn = checkbeacon(BCNREC);   // get beacon value using function
+        printf("Beacon: %d\n", bcn);  // print message
+        if( bcn == beaconA )      // double beep for 12 ms beacon
+          {           
+            beep();
+            sleep(0.1);
+            beep();
+            drive(100);
+            
+        }
+        else if (bcn == beaconB)   //single beep for 5 ms beacon
+          {
+            beep();
+            sleep(0.3);
+            drive(100);
+            collision();           
+        }
+        
+    }
+}
+void drive(int speed)
+{
+    motor(FLM,speed);    // run motors at specified speed
+    motor(FRM,speed);    
+}  // end of drive function
+void turnleft(int speed,float second)//turn the robot left
+{
+    motor(FLM,-speed);
+    motor(FRM,speed);
+    sleep(second);
+}
+void turnright(int speed,float second)//turn the robot right
+{
+    motor(FLM,speed);
+    motor(FRM,-speed);
+    sleep(second);
+}
+
+void reverse(int speed, float time)//reverse
+{
+    motor(FLM, -speed);   // run both motors backwards at given speed
+    motor(FRM, -speed);
+    sleep(time);       // do nothing for given time
+    motor(FLM,0);              // stop both motors
+    motor(FRM,0);
+}  // end of reverse function
+int checkSwitch(void)//check for collsion on the switchs
+{
+    return ((SL) + 2*(SR));  // calculate combined switch value and send it back
+}  // end of checkSwitch function
+
+void turnaround(int speed)//turnaround
+{
+    motor(FLM,-speed);
+    motor(FRM,speed);
+}
+int collision()//check what was hit
+{
+    if(checkSwitch()==1)//1 is when the left sensor is hit
+      {
+        return 1;
+        
+    }
+    if(checkSwitch()==2)//2 is for when the right sensor is hit it will follow instructions below
+      {
+        return 2;
+        
+    }
+    if(checkSwitch()==3) //if both sensors are hit it will follow this method         
+      {
+        return 3;
+    }    
+    
+}
+int checkbeacon(int beaconReceiver)//check which beacon is being recieved
+{
+    int btime = beacon(beaconReceiver);  // create variable and get beacon time
+    if((btime > 11000) && (btime < 13000)){return beaconA;}  //is it about 12 ms?
+    else if((btime > 4000) && (btime < 6000)){return beaconB;}  // is it about 5 ms?
+    else {return 0;}   // if neither, return 0
+} // end of checkbeacon function 
+
+void follow_the_white_line()//follow the white line
+{
+    while(!stop_button())// keep doing this until STOP is pressed
+      {
+        if((LLS<THR)&&(RLS<THR))
+          {
+            drive(50); 
+        }
+        if((LLS<THR)&&(RLS>THR))
+          {
+            drive(50);
+        }
+        if((LLS>THR)&&(RLS<THR))
+          {
+            drive(50);
+        }
+        if((LLS>THR)&&(RLS>THR))
+          {
+            while((LLS>THR)&&(RLS>THR))
+              {turnaround(50);}
+        } 
+        
+    }
+}
+int ball(void)//find a ball 
+{
+    if (analog(LOSENS) > 55)  //if ball seen
+      {return 1;}
+    if (analog(LOSENS) > 150) //if ball has been contacted
+      {return 2;}
+    else //no contact
+      {return 0;}
+}
+void servo()
+{
+    servo0 = 1500;       // set servo to a mid position before enabling
+    init_expbd_servos(1); // turn on the servo software
+    printf("Servo at %d    Press START\n",servo0);   // display position
+    
+    start_press();  // wait for start button
+    
+    while (!stop_button())  // repeat until button pressed
+      {
+        servo0 = servo0 + 100;  // move servo
+        if (servo0 > 2400) servo0 = 1000;  // but not too far
+        printf("Servo at %d    Press STOP\n",servo0);  // display new position
+        sleep(0.1);    // delay a little
+    }  // end of while
+    
+    printf("START = down    STOP = up\n");   // instructions
+    sleep(2.0);  // delay
+    
+    while(1)  // repeat this forever
+      {
+        if(start_button())  // if START pressed, subtract 20 from position
+          {
+            servo0 = servo0 - 20;
+        }
+        if(stop_button())   // if STOP pressed, add 20 to position
+          {
+            servo0 = servo0 + 20;
+        }
+        printf("Servo at %d\n",servo0);  // display new position
+        sleep(0.1);         // delay a little
+    }  // end of while
+}

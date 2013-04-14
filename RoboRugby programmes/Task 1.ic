@@ -1,0 +1,90 @@
+/*   RoboRugby 2011     Team 8: Evan O'Keeffe,Rachel Murphy     Challenge 1 report.
+ 
+We planned to have our robot start in the small scoring area, facing towards the opposite wall
+we then had to have it hit a ball then turn and hit another ball on the other side of the table 
+the robot then had to turn and move into the opposing scoring area.
+
+We found it quite difficult to achieve this perfectly, as the robot seemed to go off course slightly each time. 
+ We settled on a compromise turning time, and eventually hit the two balls and landed in the finishing area.
+However, our turns were'nt as precise as we wanted them to be.
+
+The basic algorithm is:
+for our robot instructions 
+can be found below
+
+We connected the motor on the left side of our robot as motor 0, 
+and the motor on the right side as motor 1.                         */
+void main(void)
+{
+    //rachel();
+    //turnaround();
+    challenge();
+}
+void rachel()//rachel's function
+{
+    printf("Hello :)");
+    beep();
+    motor(0,50);
+    motor(1,50);
+    sleep(4.0);
+    motor(0,-50);
+    motor(1,-50);
+    sleep(4.0);
+    ao();
+    
+}
+void turnaround()//test 1 with the turning speeds
+{
+    motor(0,50);
+    motor(1,50);
+    sleep(4.0);
+    motor(0,-50);
+    motor(1,50);
+    sleep(2.5);
+    motor(0,50);
+    motor(1,50);
+    sleep(4.0);
+    ao();
+}
+void challenge()
+{
+    // print a message for the human
+    printf("Press START\n");
+    // wait for the START button to be pressed
+    start_press(); 
+    
+    
+    //turn 1
+    motor(0,-50);
+    motor(1,50);
+    sleep(.8);          //robot turns right for 0.8 seconds
+    
+    //move1
+    motor(0,50);
+    motor(1,50);
+    sleep(3.5);        //robot moves straight for 3.5 seconds
+    
+    //turn 2
+    motor(0,50);
+    motor(1,-50);
+    sleep(1.8);       //turn's left for 1.8 seconds
+    
+    //move 2
+    motor(0,50);
+    motor(1,50);
+    sleep(5.3);      //goes towards the second ball for 5.3 seconds
+    
+    //turn 3
+    motor(0,-50);
+    motor(1,50);
+    sleep(1.5);      //turns right for 1.5 seconds towards the finishing area
+    
+    //move 3
+    motor(0,50);
+    motor(1,50);
+    sleep(8.5);    //moves into finishing area
+    beep();        //sound to confirm finish of function
+    ao();          //all off 
+    
+}
+

@@ -1,0 +1,102 @@
+/* Program to illustrate ball hunting algorithms using two distance sensors.
+
+   Ball detection criterion is left to the user to define - as given here,  
+   it will detect any nearby object.
+
+   Two algorithms are given:
+     method 1 spins continuously - speed can be adjusted to suit the robot used;
+     method 2 spins, stops and looks - timing can be adjusted to suit the robot. 
+   Method 2 will only be used if a switch connected to port 10 is pressed at the start. 
+
+   When a ball is detected, the robot should drive towards it.  */
+
+// define motor ports
+#define RMOTOR 1
+#define LMOTOR 2
+// define distance sensor ports
+#define LOSENS 4
+#define HISENS 5
+// define control switch port
+#define CSWITCH 10
+// define turning speed and time interval
+#define TURNSPD 50
+#define TURNTIM 0.04
+
+void main()   
+{
+    
+    printf("Press START...\n");
+    start_press();  // wait for start button
+    
+    if (digital(CSWITCH))     // if switch pressed at start, use method 2
+      {
+        
+        printf("Method 2...\n");
+        sleep(1.0);    // give human time to read message
+        
+        while (ball() == 0)  //while no ball seen
+          {
+            spinleft(TURNSPD);
+            sleep(TURNTIM);  //turn left a tiny bit...
+            ao();         // stop all motors
+            sleep(0.04);  // wait 40 ms for sensor update
+            printf("High %d Low %d\n", analog(HISENS), analog(LOSENS));  
+        }  // end while
+        
+    }  // end if
+    
+    else              // otherwise use method 1
+      {
+        
+        printf("Method 1...\n");
+        sleep(1.0);    // give human time to read message
+        
+        spinright(TURNSPD);   // start turning slowly
+        while (ball() == 0)  //while no ball seen
+          {
+            sleep(0.04);   // 40 ms delay for sensor update
+            printf("High %d Low %d\n", analog(HISENS), analog(LOSENS));  
+        }  // end while
+        ao();  // stop turning
+        
+    }  // end else
+    
+    // with either method, we should now be facing a ball...
+    drive(100);  // drive forward to hit ball
+    sleep(1.5);  // adjust time to suit robot
+    ao();
+    
+} // end of main function
+
+// function to turn on motors to drive forwards
+void drive(int speed)
+{
+    motor(LMOTOR, speed);
+    motor(RMOTOR, speed);
+}
+
+// function to turn left at given speed
+void spinleft(int speed)
+{
+    motor(LMOTOR, -speed); //turn on motors to spin left
+    motor(RMOTOR, +speed);
+}
+
+// function to turn right at given speed
+void spinright(int speed)
+{
+    motor(LMOTOR, +speed); //turn on motors to spin right
+    motor(RMOTOR, -speed);
+}
+
+// outline of function to decide if ball is present
+// returns 1 if ball seen, otherwise returns 0
+int ball(void)
+{
+    if (analog(LOSENS) > 100  /* put your criterion here */)  //if ball seen
+      return 1;
+    else
+      return 0;
+}
+
+

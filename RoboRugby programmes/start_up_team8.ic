@@ -1,0 +1,183 @@
+/*RoboRugby startup program 
+  team8:Evan O'keeffe ,Rachel Murphy,Phelim Dowling
+
+*/
+// - includes -  you can add more #use commands here
+#use framework08.ic
+#use beacons.icb
+#use definitions.ic
+
+
+// - defines -  you can define more constants here using #define
+//  START_BCN_RX is beacon receiver for startup: 1 internal, 2 external
+#define START_BCN_RX 2
+
+int a;
+// - globals -   you can define global variables here
+// global variable startbeacon is already defined, and will be 
+// given a value during the startup sequence
+
+
+void main()  //Do not alter this function 
+{   
+    rrprestart();  // runs YOUR pre-start function, 
+    // to do calibration, choose strategy, or whatever...
+    
+    while(rrstartup(START_BCN_RX));  // start-up sequence
+    // it is run again if the start is aborted
+    
+    // when the startup sequence ends
+    rrstart(start_process(rrmain(), 20));  // starts YOUR main 
+    // program as a process, with a 20ms time slice
+    
+    rrshutdown();  // shuts everything down after 60 seconds
+} // end of main
+
+
+/* Function for pre-start operations, for calibration, etc.
+   If not needed, leave empty - do not delete this function!  */
+void rrprestart()  
+{
+    
+    
+} // end of rrprestart
+
+
+/* Main program for competition.
+   Must NOT use reset_system_time() function.
+   Will be shutdown after 60 seconds automatically.
+   To start another process, must use rrstart() function.
+   Global variable  startbeacon  will be set to 5 or 12 to  
+   indicate which beacon was visible at the start. */
+void rrmain()  
+{
+    int i=0;
+    while(checkSwitch()==0){drive(100);}//our scoring area
+    reverse(50,0.50);
+    turnleft(50,0.50);
+    
+    while(checkSwitch()==0){drive(100);}//left of ours + collect a ball
+    reverse(50,0.650);
+    turnleft(50,0.50);
+    
+    while(seconds()<30.0)
+      {
+        if(ball()==1)
+          { 
+            set_digital_out(0);
+            while(collision()==0){drive(100);}
+            reverse(50,.5);
+            turnright(30,2.0);
+        }
+        else if(ball()==2)
+          {
+            while(collision()==0){drive(100);}
+            reverse(50,.5);
+            turnright(30,2.0);
+        }
+        else
+        {
+            clear_digital_out(0);
+            while(collision()==0||ball()==1||ball()==2){drive(100);}
+            reverse(50,.5);
+            turnright(30,2.0);
+        }
+    }
+    if(seconds()>20.0){move_to_the_beacon();}
+    
+} // end of rrmain
+
+
+// You can add more functions here, if you need them.
+// checkbeacon() function is already defined in framework08.ic.
+void move_to_the_beacon()//move to the beacon that is looked for
+{
+    int bcn,bcn1;         // define variable for beacon result
+    int i;
+    beacon_init(BCNREC);   // turn on beacon receiver
+    bcn = checkbeacon(BCNREC);   // get beacon value using function
+    bcn1=17-startbeacon;
+    clear_digital_out(0);
+    for(i=0;seconds()<60.0;i++)
+      {
+        
+        if(checkbeacon(BCNREC)==bcn1)
+          {set_digital_out(0);
+            while(collision()==0)
+              {
+                drive(100);
+            }
+            ao();
+            move_to_the_beacon();
+          }
+        else
+          {
+            clear_digital_out(0);
+            while(collision()==0)
+              {drive(100);sleep(1.5);turnleft(50,2.0);}
+          }
+    }
+}
+void drive(int speed)
+{
+    motor(FLM,speed);    // run motors at specified speed
+    motor(FRM,speed);    
+}  // end of drive function
+void turnleft(int speed,float second)//turn the robot left
+{
+    motor(FLM,-speed);
+    motor(FRM,speed);
+    sleep(second);
+}
+void turnright(int speed,float second)//turn the robot right
+{
+    motor(FLM,speed);
+    motor(FRM,-speed);
+    sleep(second);
+}
+
+void reverse(int speed, float time)//reverse
+{
+    motor(FLM, -speed);   // run both motors backwards at given speed
+    motor(FRM, -speed);
+    sleep(time);       // do nothing for given time
+    motor(FLM,0);              // stop both motors
+    motor(FRM,0);
+}  // end of reverse function
+int checkSwitch(void)//check for collsion on the switchs
+{
+    return ((SL) + 2*(SR));  // calculate combined switch value and send it back
+}  // end of checkSwitch function
+
+void turnaround(int speed)//turnaround
+{
+    motor(FLM,-speed);
+    motor(FRM,speed);
+}
+int collision()//check what was hit
+{
+    if(checkSwitch()==1)//1 is when the left sensor is hit
+      {
+        return 1;
+        
+    }
+    if(checkSwitch()==2)//2 is for when the right sensor is hit it will follow instructions below
+      {
+        return 2;
+        
+    }
+    if(checkSwitch()==3) //if both sensors are hit it will follow this method         
+      {
+        return 3;
+    }    
+    
+}
+int ball(void)//find a ball 
+{
+    if (analog(LOSENS) > 55)  //if ball seen
+      {return 1;}
+    if (analog(LOSENS) > 150) //if ball has been contacted
+      {return 2;}
+    else //no contact
+      {return 0;}
+}

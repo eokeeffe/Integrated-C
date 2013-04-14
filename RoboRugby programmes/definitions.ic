@@ -1,0 +1,35 @@
+// define which beacon receiver to use: 1 internal, 2 external
+#define BCNREC 2
+//front left motor
+#define FLM 2
+//front right motor
+#define FRM 1
+//back left MOTOR
+#define BLM 3
+//back right motor
+#define BRM 4
+//switch left side
+#define SL digital(9)
+//switch right side
+#define SR digital(10)
+//left light sensor
+#define LLS analog(2)
+//right light sensor
+#define RLS analog(3)
+//threshold for the analog light sensors
+#define THR 40
+//top speed
+#define FAST 100
+//medium speed
+#define MED 50
+//slow speed
+#define SLOW 25
+//beacon for side A
+#define beaconA 12
+//beacon for side B
+#define beaconB 5
+//lower sensor 
+#define LOSENS 5
+//higher sensor
+#define HISENS 4
+

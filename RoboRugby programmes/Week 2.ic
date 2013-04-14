@@ -1,0 +1,132 @@
+/*   RoboRugby       Team 8: Evan O'Keefe, Rachel Murphy and Phelim Dowling                 Challenge 2 report.
+
+For the challenge we had to split the different demands up so we could successfully complete the challenge. 
+Firstly we had to get our robot to reverse back and do a 90 degree turn when one of its two trigger switches struck an object in its path. 
+We had to program the robot to turn left when its right trigger hit the wall and turn right when its left trigger hit the wall.
+We encountered a few problems while programming the robot as such, mainly in tryin to get the loop in the programme to work. 
+We had to test many different things that the robot had to do such as what speed the turn should be at and how long the turn should be. 
+Once we had this part of the programme working we had to fit the robot with a sensor so it could 'see' when it was driving over a white line.
+We encountered a few problems with this alos including shadows appearing in the way of the sahdow and the sensor not picking up the colour white quickly enough.
+When we fixed the problems we then programmed the robot to bounce off the white line when it reached it just like it had bounce
+off the wall it hit with one of its triggers. Bouncing is just the robot reversing back slightly. To complete our challenge we had to put all the tasks together.
+We successfully had our robot drive forward and bounce off the walls four times and then when it reached a white line it stopped completely. 
+
+
+*/
+
+void main()
+{
+    int i=0;
+    printf("Collision prog. Press START\n");
+    start_press();         // wait for START to be pressed
+    printf("Driving\n");  // print message
+    drive(100);         // drive forward, full speed
+    
+    while(checkSwitch()==0) // wait for collision
+      {
+    }
+    while(i<5) // wait for collision
+      {
+        
+        if(checkSwitch()==1)//1 is when the left sensor is hit
+          {
+            i++;
+            beep();             // make sound
+            printf("Collision!left\n");  // print message
+            
+            reverse(50, 2.5); 
+            
+            motor(2,50);
+            motor(1,-50);
+            sleep(4.0);
+            motor(1,100);
+            motor(2,100);
+            
+            
+        }
+        if(checkSwitch()==2)//2 is for when the right sensor is hit it will follow instructions below
+          {
+            i++;
+            beep();             // make sound
+            printf("Collision!right\n");  // print message
+            
+            reverse(50, 2.5); 
+            motor(1,50);
+            motor(2,-50);
+            sleep(4.0);
+            motor(1,100);
+            motor(2,100);
+            
+            
+        }
+        if(checkSwitch()==3) //if both sensors are hit it will follow this method         
+          {
+            i++;
+            beep();             // make sound
+            printf("Collision!straight\n");  // print message
+            motor(1,50);
+            motor(2,-50);
+            sleep(4.0);
+            motor(1,100);
+            motor(2,100);
+        }    
+    }
+    
+    
+    
+    while(!stop_button())  // keep doing this until STOP is pressed
+      {
+        if (analog(2)  <40)  // is value from sensor low?
+          {
+            set_digital_out(0);  // if low, turn on LED
+            /* ao();            
+            beep();              // and beep
+            beep();              // and beep */
+            
+            
+        }
+        else if(analog(3)>40)  
+          {
+            drive(100);
+        }
+        else 
+        {
+            
+            clear_digital_out(0);   // otherwise turn it off
+        }
+        printf("Port 2: %d\n", analog(3));  // print value
+        
+    }
+}
+// end of main*/
+
+/* Function drive makes robot drive at specified speed.
+   It takes one integer argument, to set speed required.
+   It returns nothing.  */
+
+void drive(int speed)
+{
+    motor(1,speed);    // run motors at specified speed
+    motor(2,speed);    
+}  // end of drive function
+
+/* Function reverse makes robot reverse at given speed for given time.
+   It takes two arguments: integer for speed and float for time.
+   It returns nothing.  */
+void reverse(int speed, float time)
+{
+    motor(1, -speed);   // run both motors backwards at given speed
+    motor(2, -speed);
+    sleep(time);       // do nothing for given time
+    motor(1,0);              // stop both motors
+    motor(2,0);
+}  // end of reverse function
+
+/* Function checkSwitch checks the state of two switches.
+   It takes no arguments.
+   It returns an integer:  0 means no hit, 1 means hit on left, 
+              2 means hit on right, 3 means hit both sides  */
+int checkSwitch(void)
+{
+    return (digital(9) + 2*digital(10));  // calculate combined switch value and send it back
+}  // end of checkSwitch function

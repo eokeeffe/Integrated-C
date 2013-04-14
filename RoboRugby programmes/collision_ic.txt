@@ -1,0 +1,47 @@
+/* Program to test the collision detectors.
+   Front Left switch connected to port 10,
+   Front Right switch connected to port 9.  
+   Motors connected to motor ports 1 and 2.  */
+
+void main()
+{
+    printf("Collision prog. Press START\n");
+    start_press();         // wait for START to be pressed
+    printf("Driving\n");  // print message
+    drive(100);         // drive forward, full speed
+    while(checkSwitch()==0){} // wait for collision
+    ao();               // stop motors immediately
+    beep();             // make sound
+    printf("Collision!\n");  // print message
+    reverse(50, 0.5);    // reverse a bit and stop
+}  // end of main
+
+/* Function drive makes robot drive at specified speed.
+   It takes one integer argument, to set speed required.
+   It returns nothing.  */ 
+void drive(int speed)
+{
+    motor(1,speed);    // run motors at specified speed
+    motor(2,speed);    
+}  // end of drive function
+
+/* Function reverse makes robot reverse at given speed for given time.
+   It takes two arguments: integer for speed and float for time.
+   It returns nothing.  */
+void reverse(int speed, float time)
+{
+    motor(1, -speed);   // run both motors backwards at given speed
+    motor(2, -speed);
+    sleep(time);       // do nothing for given time
+    motor(1,0);              // stop both motors
+    motor(2,0);
+}  // end of reverse function
+
+/* Function checkSwitch checks the state of two switches.
+   It takes no arguments.
+   It returns an integer:  0 means no hit, 1 means hit on left, 
+              2 means hit on right, 3 means hit both sides  */
+int checkSwitch(void)
+{
+    return (digital(10) + 2*digital(9));  // calculate combined switch value and send it back
+}  // end of checkSwitch function

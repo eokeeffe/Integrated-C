@@ -1,0 +1,200 @@
+/* Functions needed for RoboRugby competition framework:
+     rrstartup - implements start-up sequence required by rules
+     rrshutdown - shuts down the robot after 60 seconds, as in rules
+     rrstart - keeps track of process IDs, to help with shut-down
+     checkbeacon - gets the beacon time, to help with start-up
+   Global variable startbeacon is set to beacon visible at start.  
+
+   Do not change any part of this file!  */
+
+int startbeacon = 0;  // global variable to hold beacon information
+int rrprocIDs[10], rrpointer = 0;  // array & pointer for process IDs
+
+/* Start-up function:
+   argument is beacon receiver to use: 1 = internal, 2 = external
+   returns integer 1 if start sequence is aborted, 0 if OK.  */
+int rrstartup(int rrbcnRX)  
+{
+    int bcn = 0;  // variable to hold beacon time
+    clear_digital_out(0);  // ensure yellow LED is off
+    beacon_init(rrbcnRX);  // start required beacon receiver
+    
+    // Check beacon every second while waiting for start button.
+    // Only exits if start button pressed while no beacon seen,
+    // and if the startbeacon variable has already been set.
+    while ((!start_button())||(bcn>0)||(startbeacon==0))
+      {
+        bcn = checkbeacon(rrbcnRX);  // get beacon: 0, 5 or 12
+        // print message for user
+        printf("Start-up: BeaconNow %d Start %d\n", bcn, startbeacon); 
+        if (bcn == 5)  // if see 5ms beacon
+          {
+            set_digital_out(0);  //flash the yellow LED
+            beep();  // beep once
+            clear_digital_out(0);
+            sleep(0.8);
+            startbeacon = 5;  // record for use in match
+        }
+        else if (bcn == 12)  // if see 12ms beacon
+          {
+            set_digital_out(0);   //flash the yellow LED
+            beep();  // beep 
+            clear_digital_out(0);
+            sleep(0.1);
+            set_digital_out(0);   //flash the yellow LED
+            beep();  // beep again
+            clear_digital_out(0);
+            sleep(0.6);
+            startbeacon = 12;  // record for use in match
+        }
+        else sleep(1.0);   // otherwise just delay
+    } // end of while not start button
+    
+    // robot has now been armed by pressing START button
+    
+    // high-pitched tone until START button is released
+    while(start_button()) tone(2500.0, 0.5);
+    sleep(0.2);  // short delay
+    set_digital_out(0);  // turn on yellow LED - shows armed
+    printf("Armed...        Beacon %dms\n", startbeacon);  
+                            // robot is now armed & ready
+    
+    // robot waits in this state until beacons are switched on again
+    while(checkbeacon(rrbcnRX) == 0);  // wait until see beacon
+    
+    // when beacons switched on again, start a 5-second countdown
+    // countdown aborts if STOP is pressed or if beacon turned off
+    printf("Countdown...\n");  // start countdown
+    
+    clear_digital_out(0);  // yellow LED off during first tone
+    tone(880.0, 0.8);  // play first note of tune
+    if(stop_button()||(checkbeacon(rrbcnRX)==0)) return 1;
+    
+    set_digital_out(0);  // yellow LED on during second tone
+    tone(988.0, 0.8);
+    if(stop_button()||(checkbeacon(rrbcnRX)==0)) return 1; 
+    
+    clear_digital_out(0); // yellow LED off during third tone
+    tone(784.0, 0.8);
+    if(stop_button()||(checkbeacon(rrbcnRX)==0)) return 1;
+    
+    set_digital_out(0);    // yellow LED on during fourth tone
+    tone(392.0, 0.8);
+    if(stop_button()||(checkbeacon(rrbcnRX)==0)) return 1;
+    
+    clear_digital_out(0);   // yellow LED off during fifth tone
+    tone(588.0, 1.8);
+    if(stop_button()||(checkbeacon(rrbcnRX)==0)) return 1;
+    
+    // if we got to the end of the countdown with no STOP and 
+    // beacon still on, then it is time to start the match!
+    beacon_init(0);  // switch off beacon receiver
+    printf("Starting...\n");
+    reset_system_time();  // set system clock to zero
+    return 0;
+} // end of rrstartup
+
+
+/* Start-up function - simpler version for testing:
+   argument is beacon receiver to use: 1 = internal, 2 = external
+   returns integer 1 if start sequence is aborted, 0 if OK.  */
+int rrtest_start(int rrbcnRX)  
+{
+    int bcn = 0;  // variable to hold beacon time
+    clear_digital_out(0);  // ensure yellow LED is off
+    beacon_init(rrbcnRX);  // start required beacon receiver
+    
+    // Check beacon every second while waiting for start button.
+    // Exits if start button pressed
+    // and if the startbeacon variable has already been set.
+    while ((!start_button())||(startbeacon==0))
+      {
+        bcn = checkbeacon(rrbcnRX);  // get beacon: 0, 5 or 12
+        // print message for user
+        printf("Testing:  BeaconNow %d Start %d\n", bcn, startbeacon); 
+        if (bcn == 5)  // if see 5ms beacon
+          {
+            set_digital_out(0);  //flash the yellow LED
+            beep();  // beep once
+            clear_digital_out(0);
+            sleep(0.8);
+            startbeacon = 5;  // record for use in match
+        }
+        else if (bcn == 12)  // if see 12ms beacon
+          {
+            set_digital_out(0);   //flash the yellow LED
+            beep();  // beep 
+            clear_digital_out(0);
+            sleep(0.1);
+            set_digital_out(0);   //flash the yellow LED
+            beep();  // beep again
+            clear_digital_out(0);
+            sleep(0.6);
+            startbeacon = 12;  // record for use in match
+        }
+        else sleep(1.0);   // otherwise just delay
+    } // end of while not start button
+    
+    // START button has been pressed - robot is about to go
+    set_digital_out(0);   // turn on yellow LED
+    // high-pitched tone until START button is released
+    while(start_button()) tone(2500.0, 0.5);
+    printf("Starting...\n");
+    sleep(0.5);      // delay to get finger out of the way
+    beacon_init(0);       // switch off beacon receiver
+    clear_digital_out(0);  // turn off yellow LED
+    reset_system_time();  // set system clock to zero
+    return 0;
+} // end of rrtest_start
+
+
+// Function to shut down robot after 60 seconds or on stop button
+void rrshutdown()
+{
+    int i;
+    // do nothing until need to shut down
+    while((!stop_button())&&(seconds()<60.0)) defer(); 
+    msleep(50L);  // short delay
+    
+    for(i=0; i<=rrpointer; i++)  // step through all processes
+      {
+        kill_process(rrprocIDs[i]);  // kill each process in turn
+    }
+    ao();  // shut down all motors - may be still running
+    init_expbd_servos(0);  // disable servo actuator
+    beep();
+    printf("Shutdown!\n");
+}  // end of rrshutdown
+
+
+/* Function to keep track of process IDs as processes are started,
+   so they can be killed later.
+   Usage:   rrstart(start_process(myprocess()));  */
+int rrstart(int procID)
+{
+    rrprocIDs[rrpointer] = procID;  // record process ID in array
+    rrpointer += 1;      // increment the pointer
+    return(procID);   // return process ID in case needed
+}  // end of rrstart
+
+
+/* Function to check beacon signal, return 5 or 12 for beacon time,
+   0 if no valid signal.
+   Argument 1 for internal receiver, 2 for external receiver.
+   Main function must enable appropriate receiver first!!   */
+int checkbeacon(int beacon_receiver)
+{
+    int btime = beacon(beacon_receiver);  // get beacon time
+    if((btime > 11000) & (btime < 13000)) return 12;  //is it ~12ms?
+    else if((btime > 4000) & (btime < 6000)) return 5;  // ~5ms?
+    else return 0;   // if neither, return 0
+} // end of checkbeacon function
+
+/* Function to check for 27kohm resistor on port 16.
+   Returns 1 if resistor is present, 0 if not present.  */
+int resistor(void)
+{
+    if ((analog(16)<103) && (analog(16)>83)) return 1;
+    else return 0;
+}  // end of resistor function
+
